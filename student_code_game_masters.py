@@ -34,7 +34,25 @@ class TowerOfHanoiGame(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### student code goes here
-        pass
+
+
+        output = ([],[],[])
+
+        bindings_list = self.kb.kb_ask(parse_input('fact: (on ?disk ?peg)'))
+
+        for binding in bindings_list:
+            num1 = int(binding['?peg'][3])-1
+            num2 = int(binding['?disk'][4])
+            output[num1].append(num2)
+
+        for index in output:
+             index.sort()
+
+        return tuple(tuple(e) for e in output)
+        
+        
+
+
 
     def makeMove(self, movable_statement):
         """
@@ -52,8 +70,44 @@ class TowerOfHanoiGame(GameMaster):
         Returns:
             None
         """
+
         ### Student code goes here
-        pass
+        game_state = self.getGameState()
+        
+        disk = str(movable_statement.terms[0])
+        old_peg = str(movable_statement.terms[1])
+        new_peg = str(movable_statement.terms[2])
+
+        old_peg_num = int(old_peg[-1])
+        new_peg_num = int(new_peg[-1])
+
+
+        if len(game_state[new_peg_num - 1]) == 0:
+            retract = parse_input('fact: (empty ' + new_peg + ')')
+            self.kb.kb_retract(retract)
+            
+        else:
+            retract = parse_input('fact: (top disk' + str(game_state[new_peg_num - 1][0]) + ' ' + new_peg + ')')
+            self.kb.kb_retract(retract)
+
+        retract_1 = parse_input('fact: (on ' + disk + ' ' + old_peg + ')')
+        retract_2 = parse_input('fact: (top ' + disk + ' ' + old_peg + ')')
+        self.kb.kb_retract(retract_1)
+        self.kb.kb_retract(retract_2)
+
+        add_1 = parse_input('fact: (on ' + disk + ' ' + new_peg + ')')
+        add_2 = parse_input('fact: (top ' + disk + ' ' + new_peg + ')')
+        self.kb.kb_add(add_1)
+        self.kb.kb_add(add_2)
+
+        if len(game_state[old_peg_num - 1]) > 1:
+            add = parse_input('fact: (top disk' + str(game_state[old_peg_num - 1][1]) + ' ' + old_peg + ')')
+            self.kb.kb_add(add)
+        else:
+            add = parse_input('fact: (empty ' + old_peg + ')')
+            self.kb.kb_add(add)
+
+        
 
     def reverseMove(self, movable_statement):
         """
@@ -100,7 +154,41 @@ class Puzzle8Game(GameMaster):
             A Tuple of Tuples that represent the game state
         """
         ### Student code goes here
-        pass
+        
+        output = []
+        store = {}
+
+        for y in range(1, 4):
+            output1 = []
+
+            for x in range(1, 4):
+
+                ask = Fact(['on', '?tile', 'pos' + str(x), 'pos' + str(y)])
+                bindingsList = self.kb.kb_ask(ask)
+
+                if bindingsList != False:
+                    for index in bindingsList:
+                        if index['?tile'] not in store:
+
+                            if index['?tile'] == 'empty':
+                                store[index['?tile']] = -1
+
+                            else:
+                                tile_num = int(index['?tile'][-1])
+                                store[index['?tile']] = tile_num
+
+                        output1.append(store[index['?tile']])
+                        # print(output1)
+            # print(output1)
+            output.append(tuple(output1))
+        
+        result = tuple(output)
+        # print(result)
+
+
+        return result
+        
+        
 
     def makeMove(self, movable_statement):
         """
@@ -119,7 +207,24 @@ class Puzzle8Game(GameMaster):
             None
         """
         ### Student code goes here
-        pass
+
+
+        tile = str(movable_statement.terms[0])
+        old_x = str(movable_statement.terms[1])
+        old_y = str(movable_statement.terms[2])
+        new_x = str(movable_statement.terms[3])
+        new_y = str(movable_statement.terms[4])
+
+        retract_1 = parse_input('fact: (on ' + tile + ' ' + old_x + ' ' + old_y + ')')
+        retract_2 = parse_input('fact: (on empty ' + new_x + ' ' + new_y + ')')
+        self.kb.kb_retract(retract_1)
+        self.kb.kb_retract(retract_2)
+
+        add_1 = parse_input('fact: (on empty ' + old_x + ' ' + old_y + ')')
+        add_2 = parse_input('fact: (on ' + tile + ' ' + new_x + ' ' + new_y + ')')
+        self.kb.kb_add(add_1)
+        self.kb.kb_add(add_2)
+
 
     def reverseMove(self, movable_statement):
         """
